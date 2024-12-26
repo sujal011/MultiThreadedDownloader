@@ -1,3 +1,4 @@
+package src.main.java;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -10,7 +11,7 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 
-public class Main {
+public class MultiThreadedDownloader {
 
     private static final int NUM_THREADS = 4; // Number of threads
 
