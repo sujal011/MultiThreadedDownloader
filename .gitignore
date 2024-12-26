@@ -3,5 +3,6 @@
 /target/
 dist/
 /.idea/
+.vscode/
 
 custom.mp4

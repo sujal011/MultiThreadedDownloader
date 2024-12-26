@@ -3,9 +3,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.Scanner;
 import java.nio.file.Paths;
 import java.io.InputStream;
+import java.util.Scanner;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
@@ -15,12 +15,20 @@ public class MultiThreadedDownloader {
     private static final int NUM_THREADS = 4; // Number of threads
 
     public static void main(String[] args) {
-        try (Scanner scanner = new Scanner(System.in)) {
-            System.out.print("Enter the download URL: ");
-            String fileURL = scanner.nextLine();
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Enter the download URL:");
+        String fileURL = scanner.nextLine();
+
+        System.out.println("Enter the custom filename:");
+        String savePath = scanner.nextLine();
+
+        new MultiThreadedDownloader().downloadFile(fileURL, savePath);
+    }
+
+    private void downloadFile(String fileURL, String savePath) {
+        try {
             String fileName = Paths.get(new URL(fileURL).getPath()).getFileName().toString();
-            System.out.print("Enter the custom filename ("+fileName+"): ");
-            String savePath = scanner.nextLine();
 
             // Extract file name from URL if savePath is not provided
             if (savePath.isEmpty()) {
@@ -99,7 +107,7 @@ public class MultiThreadedDownloader {
                 try (RandomAccessFile raf = new RandomAccessFile(savePath, "rw")) {
                     raf.seek(startByte);
 
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[8192]; // Increased buffer size
                     int bytesRead;
                     int totalBytesRead = 0;
                     int segmentSize = endByte - startByte + 1;
@@ -118,7 +126,5 @@ public class MultiThreadedDownloader {
                 System.err.println("Thread " + threadId + " encountered an error: " + e.getMessage());
             }
         }
-
-        
     }
 }
