@@ -6,6 +6,9 @@ import java.util.concurrent.Executors;
 import java.util.Scanner;
 import java.nio.file.Paths;
 import java.io.InputStream;
+import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
+import me.tongfei.progressbar.ProgressBarStyle;
 
 public class MultiThreadedDownloader {
 
@@ -44,11 +47,17 @@ public class MultiThreadedDownloader {
 
             // Step 3: Create a thread pool and download segments
             ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+            ProgressBarBuilder pbb = new ProgressBarBuilder()
+                    .setTaskName("Downloading")
+                    .setStyle(ProgressBarStyle.ASCII)
+                    .setInitialMax(fileSize);
+            ProgressBar pb = pbb.build();
+
             for (int i = 0; i < NUM_THREADS; i++) {
                 int startByte = i * segmentSize;
                 int endByte = (i == NUM_THREADS - 1) ? (startByte + segmentSize + remainder - 1) : startByte + segmentSize - 1;
 
-                executor.execute(new FileSegmentDownloader(fileURL, savePath, startByte, endByte, i));
+                executor.execute(new FileSegmentDownloader(fileURL, savePath, startByte, endByte, i, pb));
             }
 
             // Step 4: Shutdown the executor and wait for threads to complete
@@ -57,6 +66,7 @@ public class MultiThreadedDownloader {
                 Thread.sleep(100); // Wait for all threads to finish
             }
 
+            pb.close();
             System.out.println("Download complete!");
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,13 +79,15 @@ public class MultiThreadedDownloader {
         private final int startByte;
         private final int endByte;
         private final int threadId;
+        private final ProgressBar progressBar;
 
-        public FileSegmentDownloader(String fileURL, String savePath, int startByte, int endByte, int threadId) {
+        public FileSegmentDownloader(String fileURL, String savePath, int startByte, int endByte, int threadId, ProgressBar progressBar) {
             this.fileURL = fileURL;
             this.savePath = savePath;
             this.startByte = startByte;
             this.endByte = endByte;
             this.threadId = threadId;
+            this.progressBar = progressBar;
         }
 
         @Override
@@ -96,7 +108,7 @@ public class MultiThreadedDownloader {
                         while ((bytesRead = inputStream.read(buffer)) != -1) {
                             raf.write(buffer, 0, bytesRead);
                             totalBytesRead += bytesRead;
-                            printProgress(totalBytesRead, segmentSize);
+                            progressBar.stepBy(bytesRead);
                         }
                     }
 
@@ -107,22 +119,6 @@ public class MultiThreadedDownloader {
             }
         }
 
-        private void printProgress(int bytesRead, int totalBytes) {
-            int progress = (int) ((bytesRead / (double) totalBytes) * 100);
-            double bytesReadMB = bytesRead / (1024.0 * 1024.0);
-            double totalBytesMB = totalBytes / (1024.0 * 1024.0);
-            StringBuilder progressBar = new StringBuilder("[");
-            for (int i = 0; i < 50; i++) {
-                if (i < (progress / 2)) {
-                    progressBar.append("=");
-                } else {
-                    progressBar.append(" ");
-                }
-            }
-            progressBar.append("] ").append(String.format("%.2f", bytesReadMB)).append(" MB / ")
-                        .append(String.format("%.2f", totalBytesMB)).append(" MB (")
-                        .append(progress).append("%)");
-            System.out.print("\rThread " + threadId + " " + progressBar.toString());
-        }
+        
     }
 }

@@ -1,6 +1,7 @@
 /sample-1.mp4
 
 /target/
+dist/
 /.idea/
 
 custom.mp4
