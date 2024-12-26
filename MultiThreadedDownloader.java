@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Scanner;
 import java.nio.file.Paths;
+import java.io.InputStream;
 
 public class MultiThreadedDownloader {
 
@@ -87,10 +88,14 @@ public class MultiThreadedDownloader {
 
                     byte[] buffer = new byte[1024];
                     int bytesRead;
+                    int totalBytesRead = 0;
+                    int segmentSize = endByte - startByte + 1;
 
-                    try (var inputStream = connection.getInputStream()) {
+                    try (InputStream inputStream = connection.getInputStream()) {
                         while ((bytesRead = inputStream.read(buffer)) != -1) {
                             raf.write(buffer, 0, bytesRead);
+                            totalBytesRead += bytesRead;
+                            printProgress(totalBytesRead, segmentSize);
                         }
                     }
 
@@ -99,6 +104,20 @@ public class MultiThreadedDownloader {
             } catch (Exception e) {
                 System.err.println("Thread " + threadId + " encountered an error: " + e.getMessage());
             }
+        }
+
+        private void printProgress(int bytesRead, int totalBytes) {
+            int progress = (int) ((bytesRead / (double) totalBytes) * 100);
+            StringBuilder progressBar = new StringBuilder("[");
+            for (int i = 0; i < 50; i++) {
+                if (i < (progress / 2)) {
+                    progressBar.append("=");
+                } else {
+                    progressBar.append(" ");
+                }
+            }
+            progressBar.append("] ").append(progress).append("%");
+            System.out.print("\rThread " + threadId + " " + progressBar.toString());
         }
     }
 }
