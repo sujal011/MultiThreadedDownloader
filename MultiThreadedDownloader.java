@@ -35,7 +35,8 @@ public class MultiThreadedDownloader {
             int fileSize = connection.getContentLength();
             connection.disconnect();
 
-            System.out.println("File size: " + fileSize + " bytes");
+            double fileSizeMB = fileSize / (1024.0 * 1024.0);
+            System.out.println("File size: " + String.format("%.2f", fileSizeMB) + " MB");
 
             // Step 2: Divide the file into segments
             int segmentSize = fileSize / NUM_THREADS;
@@ -99,7 +100,7 @@ public class MultiThreadedDownloader {
                         }
                     }
 
-                    System.out.println("Thread " + threadId + " completed downloading bytes " + startByte + " to " + endByte);
+                    // System.out.println("Thread " + threadId + " completed downloading bytes " + startByte + " to " + endByte);
                 }
             } catch (Exception e) {
                 System.err.println("Thread " + threadId + " encountered an error: " + e.getMessage());
@@ -108,6 +109,8 @@ public class MultiThreadedDownloader {
 
         private void printProgress(int bytesRead, int totalBytes) {
             int progress = (int) ((bytesRead / (double) totalBytes) * 100);
+            double bytesReadMB = bytesRead / (1024.0 * 1024.0);
+            double totalBytesMB = totalBytes / (1024.0 * 1024.0);
             StringBuilder progressBar = new StringBuilder("[");
             for (int i = 0; i < 50; i++) {
                 if (i < (progress / 2)) {
@@ -116,7 +119,9 @@ public class MultiThreadedDownloader {
                     progressBar.append(" ");
                 }
             }
-            progressBar.append("] ").append(progress).append("%");
+            progressBar.append("] ").append(String.format("%.2f", bytesReadMB)).append(" MB / ")
+                        .append(String.format("%.2f", totalBytesMB)).append(" MB (")
+                        .append(progress).append("%)");
             System.out.print("\rThread " + threadId + " " + progressBar.toString());
         }
     }
